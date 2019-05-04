@@ -6,11 +6,11 @@
 #include <ucontext.h>
 #include <sys/mman.h>
 
-void tcb_free(tcb *thread);
-
 struct tcb {
 	int         thread_id;
 	int         thread_priority;
 	ucontext_t *thread_context;
 	struct tcb *next;
 }; typedef struct tcb tcb;
+
+void tcb_free(tcb *thread);
