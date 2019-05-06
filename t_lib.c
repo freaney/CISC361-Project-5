@@ -84,6 +84,10 @@ void t_shutdown(void) {
 }
 
 void t_terminate(void) {
-	return;
+	tcb *curr = running;
+	setcontext(ready->thread_context);
+	running = ready;
+	ready = ready->next;
+	free(curr);
 }
 void tcb_free(tcb *thread);
