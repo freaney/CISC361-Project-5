@@ -20,7 +20,7 @@ void t_yield()
 		tmp2->next = tmp;
 		ready = ready->next;
 		running->next = NULL;
-		swapcontext(ready->thread_context, running->thread_context);
+		swapcontext(tmp->thread_context, running->thread_context);
 	}
 }
 
@@ -84,6 +84,10 @@ void t_shutdown(void) {
 }
 
 void t_terminate(void) {
-	return;
+	tcb *curr = running;
+	setcontext(ready->thread_context);
+	running = ready;
+	ready = ready->next;
+	free(curr);
 }
 void tcb_free(tcb *thread);
