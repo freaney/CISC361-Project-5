@@ -13,4 +13,11 @@ struct tcb {
 	struct tcb *next;
 }; typedef struct tcb tcb;
 
+/*
+ * Function: tcb_free
+ * -------------------
+ *  Helper function for t_terminate() and t_shutdown() to free memory from struct tcb
+ *
+ *  Returns: void
+ */
 void tcb_free(tcb *thread);
