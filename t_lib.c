@@ -113,7 +113,7 @@ void t_terminate(void) {
 	/* setcontext(running->thread_context); */
 	/* tcb_free(tmp); */
 	/* free(tmp); */
-	running->next = NULL;
+	running->next = NULL; // make sure
 	tcb_free(running);
 	free(running);
 	running = ready;
