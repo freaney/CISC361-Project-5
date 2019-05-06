@@ -6,6 +6,8 @@
 tcb *running;
 tcb *ready;
 
+// relinqueshes CPU to thread on running queue, moves new thread to running,
+// moves old running to end of ready
 void t_yield()
 {
 	if (ready !=NULL){
@@ -24,16 +26,10 @@ void t_yield()
 			while (tmp2->next != NULL) 
 				tmp2 = tmp2->next;
 		swapcontext(tmp2->thread_context, running->thread_context);
-
-		/* tmp = ready; */
-		/* while (tmp != NULL){ */
-		/* 	printf("%d -> ", tmp->thread_id); */
-		/* 	tmp = tmp->next; */
-		/* } */
-		/* printf("NULL\n"); */
 	}
 }
 
+// sets up first thread (main) sets up running and ready queues
 void t_init()
 {
 	tcb *tmp = malloc(sizeof(tcb));
@@ -76,17 +72,12 @@ int t_create(void (*fct)(int), int id, int pri)
 		while (tmp->next != NULL) {
 			tmp = tmp->next;
 		}
-		tmp->next = new_tcb;
+		tmp->next = new_tcb; // add to end of ready list
 	}
-	/* tmp = ready; */
-	/* while (tmp != NULL){ */
-	/* 	printf("%d -> ", tmp->thread_id); */
-	/* 	tmp = tmp->next; */
-	/* } */
-	/* printf("NULL\n"); */
 }
 
 
+// frees all threads
 void t_shutdown(void) {
 
 	if (ready != NULL) {
@@ -94,33 +85,28 @@ void t_shutdown(void) {
 		while (tmp->next != NULL) {
 			tcb *last = tmp;
 			tmp = tmp->next;
-			tcb_free(last);
-			free(last);
+			tcb_free(last); //free contex
+			free(last);   // free thread
 		}
 		free(tmp);
 	}
 	/* free(running->thread_context); */
-	tcb_free(running);
-	free(running);
+	tcb_free(running); // free context
+	free(running); // free thread
 }
 
+// removes and frees running thread
 void t_terminate(void) {
-	/* tcb *tmp = running; */
-	/* running->next = NULL; */
-	/* running = ready; */
-	/* ready = ready->next; */
-	/* /1* running->next = NULL; *1/ */
-	/* setcontext(running->thread_context); */
-	/* tcb_free(tmp); */
-	/* free(tmp); */
-	running->next = NULL; // make sure
-	tcb_free(running);
-	free(running);
-	running = ready;
-	ready = ready->next;
-	running->next = NULL;
+	running->next = NULL; // make sure its the only one in the list
+	tcb_free(running); // free the context
+	free(running);  // free the thread
+	running = ready;  // update running to a ready thread
+	ready = ready->next; // remove last head of ready
+	running->next = NULL; // only one running
 	setcontext(running->thread_context);
 }
+
+// Frees the thread's stack and context
 void tcb_free(tcb *thread) {
 	free(thread->thread_context->uc_stack.ss_sp);
 	/* free(thread->thread_context->uc_stack); */
