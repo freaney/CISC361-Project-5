@@ -10,11 +10,16 @@ tcb *head;
 void t_yield()
 {
 	if (ready !=NULL){
-		tcb *tmp;
-
+		tcb *tmp, *tmp2;
 		tmp = running;
 		running = ready;
-		ready = tmp;
+		tmp2 = ready;
+		while (tmp2->next != NULL) {
+			tmp2 = tmp2->next;
+		}
+		tmp2->next = tmp;
+		ready = ready->next;
+		running->next = NULL;
 		swapcontext(ready->thread_context, running->thread_context);
 	}
 }
@@ -67,6 +72,18 @@ int t_create(void (*fct)(int), int id, int pri)
 }
 
 
-void t_terminate(void);
+void t_shutdown(void) {
+	tcb *tmp = ready;
+	while (tmp->next != NULL) {
+		tcb *last = tmp;
+		tmp = tmp->next;
+		free(last);
+	}
+	free(tmp);
+	free(running);
+}
 
+void t_terminate(void) {
+	return;
+}
 void tcb_free(tcb *thread);
