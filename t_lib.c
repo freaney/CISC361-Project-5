@@ -107,25 +107,24 @@ void tcb_free(tcb *thread) {
 
 
 ////////////////////////////////// SEMAPHORES /////////////////////////////////
-int sem_init(sem_t **sp, unsigned int sem_count)
-{
+int sem_init(sem_t **sp, unsigned int sem_count) {
   *sp = malloc(sizeof(sem_t));
   (*sp)->count = sem_count;
   (*sp)->q = NULL;
 }
 
-void sem_wait(sem_t *s)
-{
-
+void sem_wait(sem_t *s) {
+  while (s->count < 1){
+    t_yield();
+  }
+  s->count --;
 }
 
-void sem_signal(sem_t *s)
-{
-
+void sem_signal(sem_t *s) {
+  s->count ++;
 }
 
 void sem_destroy(sem_t **s)
 {
 
 }
-
