@@ -13,6 +13,10 @@ struct tcb {
 	struct tcb *next;
 }; typedef struct tcb tcb;
 
+typedef struct {
+  int count;
+  tcb *q;
+} sem_t;
 /*
  * Function: tcb_free
  * -------------------
