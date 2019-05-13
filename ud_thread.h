@@ -1,3 +1,4 @@
+#include "t_lib.h"
 /*
  * thread library function prototypes
  */
@@ -54,8 +55,6 @@ void t_shutdown(void);
  *  Return: void
  */
 void t_terminate(void);
-
-typedef void sem_t; // for semaphore
 
 int sem_init(sem_t **sp, unsigned int count);
 void sem_wait(sem_t *sp);
