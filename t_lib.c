@@ -132,11 +132,43 @@ void sem_destroy(sem_t **s)
 /////////////////////////////// Messaging /////////////////////////////////////
 int mbox_create(mbox **mb) {
   *mb = malloc(sizeof(mbox));
-  (*mb)->msg = malloc(sizeof(struct messageNode));
+  /* (*mb)->msg = malloc(sizeof(struct messageNode)); */
+  (*mb)->msg = NULL;
   (*mb)->mbox_sem = malloc(sizeof(sem_t));
+  sem_init(&((*mb)->mbox_sem), 0);
 }
 
 // going to assume that sender and receiver are both the running thread's id
 void mbox_deposit(mbox *mb, char *msg, int len) {
-  
+  struct messageNode *newMsg = malloc(sizeof(struct messageNode));
+  newMsg->sender = running->thread_id;
+  newMsg->receiver = running->thread_id;
+  newMsg->next = NULL;
+  newMsg->message = msg;
+  newMsg->len = len;
+
+  sem_wait(mb->mbox_sem);
+  struct messageNode *cur = mb->msg;
+  if (cur == NULL) {
+    mb->msg = newMsg;
+  }
+  else {
+    while (cur->next != NULL) {
+      cur = cur->next;
+    }
+    cur->next = newMsg;
+  }
+  sem_signal(mb->mbox_sem);
+}
+
+void mbox_withdraw(mbox *mb, char *msg, int *len) {
+  if (mb->msg == NULL)
+    return;
+  sem_wait(mb->mbox_sem);
+  msg = mb->msg->message;
+  *len = mb->msg->len;
+  struct messageNode *tmp = mb->msg;
+  mb->msg = mb->msg->next;
+  free(tmp);
+  sem_signal(mb->mbox_sem);
 }
