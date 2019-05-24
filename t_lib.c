@@ -172,7 +172,7 @@ void sem_destroy(sem_t **s)
 	free(*s);
 }
 
-/////////////////////////////// Messaging /////////////////////////////////////
+/////////////////////////////// MESSAGING /////////////////////////////////////
 int mbox_create(mbox **mb) {
   *mb = malloc(sizeof(mbox));
   /* (*mb)->msg = malloc(sizeof(struct messageNode)); */

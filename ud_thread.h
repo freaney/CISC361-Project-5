@@ -119,7 +119,7 @@ void sem_signal(sem_t *sp);
  */
 void sem_destroy(sem_t **sp);
 
-
+////////////////////////////// MESSAGING //////////////////////////////////////
 int mbox_create(mbox **mb);
 
 int mbox_create(mbox **mb);
