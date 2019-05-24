@@ -11,6 +11,7 @@
  */
 
 #include "ud_thread.h"
+#include <string.h>
 
 tcb *running;
 tcb *ready;
@@ -179,7 +180,7 @@ int mbox_create(mbox **mb) {
   /* (*mb)->msg = malloc(sizeof(struct messageNode)); */
   (*mb)->msg = NULL;
   (*mb)->mbox_sem = malloc(sizeof(sem_t));
-  sem_init(&((*mb)->mbox_sem), 0);
+  sem_init(&((*mb)->mbox_sem), 1);
 }
 
 void mbox_destroy(mbox **mb) {
@@ -191,7 +192,8 @@ void mbox_deposit(mbox *mb, char *msg, int len) {
   newMsg->sender = running->thread_id;
   newMsg->receiver = running->thread_id; //PROBABLY NEED TO CHANGE THIS LATER
   newMsg->next = NULL;
-  newMsg->message = msg;
+  newMsg->message = malloc(sizeof(char*)*(1+strlen(msg)));
+  strcpy(newMsg->message, msg);
   newMsg->len = len;
 
   sem_wait(mb->mbox_sem);
@@ -212,10 +214,11 @@ void mbox_withdraw(mbox *mb, char *msg, int *len) {
   if (mb->msg == NULL)
     return;
   sem_wait(mb->mbox_sem);
-  msg = mb->msg->message;
+  strcpy(msg, mb->msg->message);
   *len = mb->msg->len;
   struct messageNode *tmp = mb->msg;
   mb->msg = mb->msg->next;
+  free(tmp->message);
   free(tmp);
   sem_signal(mb->mbox_sem);
 }
