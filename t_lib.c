@@ -11,9 +11,11 @@
  */
 
 #include "ud_thread.h"
+#include <string.h>
 
 tcb *running;
 tcb *ready;
+struct mboxList *box_list;
 
 // relinqueshes CPU to thread on running queue, moves new thread to running,
 // moves old running to end of ready
@@ -44,12 +46,11 @@ void t_init() {
   tmp->next = NULL;
   tmp->thread_id = 0;
   tmp->thread_priority = 0;
-  tmp->mbox = NULL;
-  mbox_create(&tmp->mbox);
 
   getcontext(tmp->thread_context); /* let tmp be the context of main() */
   running = tmp;
   ready = NULL;
+  box_list = NULL;
 }
 
 int t_create(void (*fct)(int), int id, int pri) {
@@ -78,6 +79,24 @@ int t_create(void (*fct)(int), int id, int pri) {
       tmp = tmp->next;
     }
     tmp->next = new_tcb; // add to end of ready list
+  }
+
+  mbox *mb;
+  mbox_create(&mb);
+  if (box_list == NULL) {
+    box_list = malloc(sizeof (struct mboxList));
+    box_list->mbox = mb;
+    box_list->tid = id;
+    box_list->next = NULL;
+  }
+  else {
+    struct mboxList *cur_box = box_list;
+    while (cur_box->next !=NULL) {
+      cur_box = cur_box->next;
+    }
+    cur_box->next = malloc(sizeof(struct mboxList));
+    cur_box->next->mbox = mb;
+    cur_box->next->tid = id;
   }
 }
 
@@ -173,21 +192,26 @@ void sem_destroy(sem_t **s)
 }
 
 /////////////////////////////// MESSAGING /////////////////////////////////////
+
 int mbox_create(mbox **mb) {
   *mb = malloc(sizeof(mbox));
   /* (*mb)->msg = malloc(sizeof(struct messageNode)); */
   (*mb)->msg = NULL;
   (*mb)->mbox_sem = malloc(sizeof(sem_t));
-  sem_init(&((*mb)->mbox_sem), 0);
+  sem_init(&((*mb)->mbox_sem), 1);
+}
+
+void mbox_destroy(mbox **mb) {
 }
 
 // going to assume that sender and receiver are both the running thread's id
-void mbox_deposit(mbox *mb, char *msg, int len, int receiver) {
+void mbox_deposit(mbox *mb, char *msg, int len) {
   struct messageNode *newMsg = malloc(sizeof(struct messageNode));
   newMsg->sender = running->thread_id;
-  newMsg->receiver = receiver;
+  newMsg->receiver = running->thread_id; //PROBABLY NEED TO CHANGE THIS LATER
   newMsg->next = NULL;
-  newMsg->message = msg;
+  newMsg->message = malloc(sizeof(char*)*(1+strlen(msg)));
+  strcpy(newMsg->message, msg);
   newMsg->len = len;
 
   sem_wait(mb->mbox_sem);
@@ -204,28 +228,87 @@ void mbox_deposit(mbox *mb, char *msg, int len, int receiver) {
   sem_signal(mb->mbox_sem);
 }
 
+void mbox_depositV2(mbox *mb, char *msg, int len, int tid) {
+  struct messageNode *newMsg = malloc(sizeof(struct messageNode));
+  newMsg->sender = running->thread_id;
+  newMsg->receiver = tid; //PROBABLY NEED TO CHANGE THIS LATER
+  newMsg->next = NULL;
+  newMsg->message = malloc(sizeof(char*)*(1+strlen(msg)));
+  strcpy(newMsg->message, msg);
+  newMsg->len = len;
+
+  sem_wait(mb->mbox_sem);
+  struct messageNode *cur = mb->msg;
+  if (cur == NULL) {
+    mb->msg = newMsg;
+  }
+  else {
+    while (cur->next != NULL) {
+      cur = cur->next;
+    }
+    cur->next = newMsg;
+  }
+  sem_signal(mb->mbox_sem);
+}
 void mbox_withdraw(mbox *mb, char *msg, int *len) {
   if (mb->msg == NULL)
     return;
   sem_wait(mb->mbox_sem);
-  msg = mb->msg->message;
+  strcpy(msg, mb->msg->message);
   *len = mb->msg->len;
   struct messageNode *tmp = mb->msg;
   mb->msg = mb->msg->next;
+  free(tmp->message);
   free(tmp);
+  sem_signal(mb->mbox_sem);
+}
+
+void mbox_withdrawV2(mbox *mb, char *msg, int *len, int *tid) {
+  if (mb->msg == NULL)
+    return;
+  sem_wait(mb->mbox_sem);
+  strcpy(msg, mb->msg->message);
+  *tid = mb->msg->sender;
+  *len = mb->msg->len;
+  struct messageNode *tmp = mb->msg;
+  mb->msg = mb->msg->next;
+  free(tmp->message);
+  free(tmp);
+  sem_signal(mb->mbox_sem);
+}
+
+void mbox_withdrawV3(mbox *mb, char *msg, int *len, int tid) {
+  if (mb->msg == NULL)
+    return;
+  sem_wait(mb->mbox_sem);
+  struct messageNode *curmsg = mb->msg;
+  struct messageNode *prev = NULL;
+  while (curmsg != NULL) {
+    if (curmsg->sender == tid){
+      strcpy(msg, curmsg->message);
+      *len = curmsg->len;
+      struct messageNode *tmp = curmsg;
+      curmsg = curmsg->next;
+      if (prev !=NULL) {
+        prev->next = curmsg;
+      }
+      /* free(tmp->message); */
+      /* free(tmp); */
+      break;
+    }
+    /* printf("%s\n", curmsg->message); */
+    prev = curmsg;
+    curmsg = curmsg->next;
+  }
   sem_signal(mb->mbox_sem);
 }
 
 void send(int tid, char *msg, int len) {
   mbox box;
-  tcb *tmp = ready;
-  if (tmp == NULL) {
-    printf("Error: no possible receivers\n");
-    return;
-  }
-  while (tmp->next != NULL) {
-    if (tmp->thread_id == tid) {
-      mbox_deposit(tmp->mbox, msg, len, tmp->thread_id);
+  struct mboxList *tmp = box_list;
+  while (tmp != NULL) {
+    if (tmp->tid == tid) {
+      mbox_depositV2(tmp->mbox, msg, len, tid);
       return;
     }
     tmp = tmp->next;
@@ -233,3 +316,22 @@ void send(int tid, char *msg, int len) {
   printf("Error: no possible receivers\n");
 }
 
+void receive(int *tid, char *msg, int *len) {
+  mbox box;
+  struct mboxList *tmp = box_list;
+  while (tmp != NULL) {
+    /* printf("current box is %d\n", tmp->tid); */
+    if (tmp->tid == running->thread_id) {
+      if (*tid == 0)
+        mbox_withdrawV2(tmp->mbox, msg, len, tid);
+      else
+        mbox_withdrawV3(tmp->mbox, msg, len, *tid);
+        /* mbox_withdrawV2(tmp->mbox, msg, len, tid); */
+
+      return;
+    }
+    tmp = tmp->next;
+  }
+  /* printf("msg = %s\n", msg); */
+  printf("Error: no possible receivers\n");
+}
