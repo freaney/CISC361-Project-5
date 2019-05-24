@@ -44,6 +44,8 @@ void t_init() {
   tmp->next = NULL;
   tmp->thread_id = 0;
   tmp->thread_priority = 0;
+  tmp->mbox = NULL;
+  mbox_create(&tmp->mbox);
 
   getcontext(tmp->thread_context); /* let tmp be the context of main() */
   running = tmp;
@@ -169,3 +171,65 @@ void sem_destroy(sem_t **s)
 {
 	free(*s);
 }
+
+/////////////////////////////// Messaging /////////////////////////////////////
+int mbox_create(mbox **mb) {
+  *mb = malloc(sizeof(mbox));
+  /* (*mb)->msg = malloc(sizeof(struct messageNode)); */
+  (*mb)->msg = NULL;
+  (*mb)->mbox_sem = malloc(sizeof(sem_t));
+  sem_init(&((*mb)->mbox_sem), 0);
+}
+
+// going to assume that sender and receiver are both the running thread's id
+void mbox_deposit(mbox *mb, char *msg, int len, int receiver) {
+  struct messageNode *newMsg = malloc(sizeof(struct messageNode));
+  newMsg->sender = running->thread_id;
+  newMsg->receiver = receiver;
+  newMsg->next = NULL;
+  newMsg->message = msg;
+  newMsg->len = len;
+
+  sem_wait(mb->mbox_sem);
+  struct messageNode *cur = mb->msg;
+  if (cur == NULL) {
+    mb->msg = newMsg;
+  }
+  else {
+    while (cur->next != NULL) {
+      cur = cur->next;
+    }
+    cur->next = newMsg;
+  }
+  sem_signal(mb->mbox_sem);
+}
+
+void mbox_withdraw(mbox *mb, char *msg, int *len) {
+  if (mb->msg == NULL)
+    return;
+  sem_wait(mb->mbox_sem);
+  msg = mb->msg->message;
+  *len = mb->msg->len;
+  struct messageNode *tmp = mb->msg;
+  mb->msg = mb->msg->next;
+  free(tmp);
+  sem_signal(mb->mbox_sem);
+}
+
+void send(int tid, char *msg, int len) {
+  mbox box;
+  tcb *tmp = ready;
+  if (tmp == NULL) {
+    printf("Error: no possible receivers\n");
+    return;
+  }
+  while (tmp->next != NULL) {
+    if (tmp->thread_id == tid) {
+      mbox_deposit(tmp->mbox, msg, len, tmp->thread_id);
+      return;
+    }
+    tmp = tmp->next;
+  }
+  printf("Error: no possible receivers\n");
+}
+

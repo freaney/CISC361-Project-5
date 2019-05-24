@@ -18,12 +18,26 @@ struct tcb {
 	int         thread_priority;
 	ucontext_t *thread_context;
 	struct tcb *next;
+  struct mbox       *mbox;
 }; typedef struct tcb tcb;
 
 typedef struct {
   int count;
   tcb *q;
 } sem_t;
+
+struct messageNode {
+  char *message;     // copy of the message 
+  int  len;          // length of the message 
+  int  sender;       // TID of sender thread 
+  int  receiver;     // TID of receiver thread 
+  struct messageNode *next; // pointer to next node 
+};
+
+struct mbox{
+  struct messageNode  *msg;       // message queue
+  sem_t               *mbox_sem;
+}; typedef mbox mbox;
 
 /*
  * Function: tcb_free
