@@ -1,6 +1,13 @@
 /*
- * types used by thread library
+ * t_lib.h
+ *
+ * Authors: Sophia Freaney and Connor Onweller
+ *
+ * Purpose: Houses tcb struct, sem_t struct, and
+ * 			tcb_free function
+ *
  */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <ucontext.h>
@@ -17,6 +24,7 @@ typedef struct {
   int count;
   tcb *q;
 } sem_t;
+
 /*
  * Function: tcb_free
  * -------------------
