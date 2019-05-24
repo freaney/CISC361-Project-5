@@ -1,8 +1,17 @@
-/* #include "t_lib.h" */
+/*
+ * t_lib.c
+ *
+ * Authors: Sophia Freaney and Connor Onweller
+ *
+ * Purpose: Implements function to initialize thread library,
+ * 			create/terminate threads, and use semaphores. Struct
+ * 			descriptions are in t_lib.h, and extended function
+ * 			descriptions are in ud_thread.c
+ *
+ */
+
 #include "ud_thread.h"
 
-// ucontext_t *running;
-// ucontext_t *ready;
 tcb *running;
 tcb *ready;
 
@@ -10,21 +19,21 @@ tcb *ready;
 // moves old running to end of ready
 void t_yield() {
   if (ready != NULL) {
-    tcb *tmp, *tmp2;
-    tmp = running;
-    running = ready;
-    tmp2 = ready;
-    while (tmp2->next != NULL) {
-      tmp2 = tmp2->next;
+    tcb *old, *new, *tmp;
+    old = running;
+	new = ready;
+	// Goes to end of ready queue and adds currently running thread, which will be
+	// deactivated at end of function. Also dequeues the new thread to be run from
+	// the head of the ready thread.
+    tmp = ready;
+    while (tmp->next != NULL) {
+      tmp = tmp->next;
     }
-    tmp2->next = tmp;
-    ready = ready->next;
-    running->next = NULL;
-    tmp2 = ready;
-    if (tmp2 != NULL)
-      while (tmp2->next != NULL)
-        tmp2 = tmp2->next;
-    swapcontext(tmp2->thread_context, running->thread_context);
+    tmp->next = old;
+	ready = ready->next;
+    new->next = NULL;
+	running = new;
+	swapcontext(old->thread_context, new->thread_context);
   }
 }
 
@@ -110,27 +119,29 @@ int sem_init(sem_t **sp, unsigned int sem_count) {
   *sp = malloc(sizeof(sem_t));
   (*sp)->count = sem_count;
   (*sp)->q = NULL;
+  return sem_count;
 }
 
 void sem_wait(sem_t *s) {
 	while (s->count < 1) {
-		//Basically t_yield()
-		tcb *past = running;
+		tcb *old, *new;
+		old = running;
+		new = ready;
+		running = new;
+		ready = ready->next;
 		// Enqueues previously running thread to semaphore queue
 		tcb *tmp = s->q;
 		if (tmp == NULL) {
-			s->q = past;
+			s->q = old;
 		} else {
 			while (tmp->next != NULL) {
 				tmp = tmp->next;
 			}
-			tmp->next = past;
+			tmp->next = old;
 		}
-		running = ready;
-		ready = ready->next;
-		running->next = NULL;
+		new->next = NULL;
 		// Activates new thread
-		swapcontext(past->thread_context, running->thread_context);
+		swapcontext(old->thread_context, new->thread_context);
 	}
 	s->count--;
 }
@@ -156,9 +167,5 @@ void sem_signal(sem_t *s) {
 
 void sem_destroy(sem_t **s)
 {
-//	free(s);
-//  free(s->q)
-//  for (int i=0; i<4; i++) {
-//  	free(tmp);
-//  }
+	free(*s);
 }
