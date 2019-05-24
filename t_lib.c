@@ -282,16 +282,22 @@ void mbox_withdrawV3(mbox *mb, char *msg, int *len, int tid) {
     return;
   sem_wait(mb->mbox_sem);
   struct messageNode *curmsg = mb->msg;
+  struct messageNode *prev = NULL;
   while (curmsg != NULL) {
     if (curmsg->sender == tid){
       strcpy(msg, curmsg->message);
       *len = curmsg->len;
       struct messageNode *tmp = curmsg;
       curmsg = curmsg->next;
-      free(tmp->message);
-      free(tmp);
+      if (prev !=NULL) {
+        prev->next = curmsg;
+      }
+      /* free(tmp->message); */
+      /* free(tmp); */
       break;
     }
+    /* printf("%s\n", curmsg->message); */
+    prev = curmsg;
     curmsg = curmsg->next;
   }
   sem_signal(mb->mbox_sem);
@@ -320,6 +326,7 @@ void receive(int *tid, char *msg, int *len) {
         mbox_withdrawV2(tmp->mbox, msg, len, tid);
       else
         mbox_withdrawV3(tmp->mbox, msg, len, *tid);
+        /* mbox_withdrawV2(tmp->mbox, msg, len, tid); */
 
       return;
     }
