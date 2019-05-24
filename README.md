@@ -5,9 +5,9 @@ The main objective of this assignment is to design and implement a user-level th
 
 ## Usage
 Compile and run with:
-'''
+```
 make
-'''
+```
 
 ## Phase 1
 * Thread library initialization
