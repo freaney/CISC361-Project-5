@@ -128,3 +128,15 @@ void sem_destroy(sem_t **s)
 {
 
 }
+
+/////////////////////////////// Messaging /////////////////////////////////////
+int mbox_create(mbox **mb) {
+  *mb = malloc(sizeof(mbox));
+  (*mb)->msg = malloc(sizeof(struct messageNode));
+  (*mb)->mbox_sem = malloc(sizeof(sem_t));
+}
+
+// going to assume that sender and receiver are both the running thread's id
+void mbox_deposit(mbox *mb, char *msg, int len) {
+  
+}
