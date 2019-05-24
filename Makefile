@@ -52,11 +52,42 @@ t3.o: t3.c ud_thread.h Makefile
 t3: t3.o t_lib.a Makefile
 	${CC} ${CFLAGS} t3.o t_lib.a -o t3
 
+t5.o: t5.c ud_thread.h Makefile
+	${CC} ${CFLAGS} -c t5.c
+
+t5: t5.o t_lib.a Makefile
+	${CC} ${CFLAGS} t5.o t_lib.a -o t5
+
+t6.o: t6.c ud_thread.h Makefile
+	${CC} ${CFLAGS} -c t6.c
+
+t6: t6.o t_lib.a Makefile
+	${CC} ${CFLAGS} t6.o t_lib.a -o t6
+
+t8.o: t8.c ud_thread.h Makefile
+	${CC} ${CFLAGS} -c t8.c
+
+t8: t8.o t_lib.a Makefile
+	${CC} ${CFLAGS} t8.o t_lib.a -o t8
+
+
+t9.o: t9.c ud_thread.h Makefile
+	${CC} ${CFLAGS} -c t9.c
+
+t9: t9.o t_lib.a Makefile
+	${CC} ${CFLAGS} t9.o t_lib.a -o t9
+
 t10.o: t10.c ud_thread.h Makefile
 	${CC} ${CFLAGS} -c t10.c
 
 t10: t10.o t_lib.a Makefile
 	${CC} ${CFLAGS} t10.o t_lib.a -o t10
 
+t11.o: t11.c ud_thread.h Makefile
+	${CC} ${CFLAGS} -c t11.c
+
+t11: t11.o t_lib.a Makefile
+	${CC} ${CFLAGS} t11.o t_lib.a -o t11
+
 clean:
-	rm -f t_lib.a *.o t1 tx t3 t10 ${EXECS} ${LIBOBJS} ${TSTOBJS} 
+	rm -f t_lib.a *.o t1 tx t3 t5 t6 t8 t9 t10 t11 ${EXECS} ${LIBOBJS} ${TSTOBJS} 

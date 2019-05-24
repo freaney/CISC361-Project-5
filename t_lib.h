@@ -37,7 +37,7 @@ struct messageNode {
 struct mbox{
   struct messageNode  *msg;       // message queue
   sem_t               *mbox_sem;
-}; typedef mbox mbox;
+}; typedef struct mbox mbox;
 
 /*
  * Function: tcb_free

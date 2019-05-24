@@ -173,6 +173,7 @@ void sem_destroy(sem_t **s)
 }
 
 /////////////////////////////// MESSAGING /////////////////////////////////////
+
 int mbox_create(mbox **mb) {
   *mb = malloc(sizeof(mbox));
   /* (*mb)->msg = malloc(sizeof(struct messageNode)); */
@@ -181,11 +182,14 @@ int mbox_create(mbox **mb) {
   sem_init(&((*mb)->mbox_sem), 0);
 }
 
+void mbox_destroy(mbox **mb) {
+}
+
 // going to assume that sender and receiver are both the running thread's id
-void mbox_deposit(mbox *mb, char *msg, int len, int receiver) {
+void mbox_deposit(mbox *mb, char *msg, int len) {
   struct messageNode *newMsg = malloc(sizeof(struct messageNode));
   newMsg->sender = running->thread_id;
-  newMsg->receiver = receiver;
+  newMsg->receiver = running->thread_id; //PROBABLY NEED TO CHANGE THIS LATER
   newMsg->next = NULL;
   newMsg->message = msg;
   newMsg->len = len;
@@ -225,7 +229,7 @@ void send(int tid, char *msg, int len) {
   }
   while (tmp->next != NULL) {
     if (tmp->thread_id == tid) {
-      mbox_deposit(tmp->mbox, msg, len, tmp->thread_id);
+      mbox_deposit(tmp->mbox, msg, len);
       return;
     }
     tmp = tmp->next;
@@ -233,3 +237,5 @@ void send(int tid, char *msg, int len) {
   printf("Error: no possible receivers\n");
 }
 
+void receive(int *tid, char *msg, int *len) {
+}
