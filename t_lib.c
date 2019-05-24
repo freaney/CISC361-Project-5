@@ -141,10 +141,10 @@ int mbox_create(mbox **mb) {
 }
 
 // going to assume that sender and receiver are both the running thread's id
-void mbox_deposit(mbox *mb, char *msg, int len) {
+void mbox_deposit(mbox *mb, char *msg, int len, int receiver) {
   struct messageNode *newMsg = malloc(sizeof(struct messageNode));
   newMsg->sender = running->thread_id;
-  newMsg->receiver = running->thread_id;
+  newMsg->receiver = receiver;
   newMsg->next = NULL;
   newMsg->message = msg;
   newMsg->len = len;
@@ -175,4 +175,20 @@ void mbox_withdraw(mbox *mb, char *msg, int *len) {
   sem_signal(mb->mbox_sem);
 }
 
+void send(int tid, char *msg, int len) {
+  mbox box;
+  tcb *tmp = ready;
+  if (tmp == NULL) {
+    printf("Error: no possible receivers\n");
+    return;
+  }
+  while (tmp->next != NULL) {
+    if (tmp->thread_id == tid) {
+      mbox_deposit(tmp->mbox, msg, len, tmp->thread_id);
+      return;
+    }
+    tmp = tmp->next;
+  }
+  printf("Error: no possible receivers\n");
+}
 
