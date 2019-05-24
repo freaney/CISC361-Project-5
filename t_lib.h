@@ -18,7 +18,6 @@ struct tcb {
 	int         thread_priority;
 	ucontext_t *thread_context;
 	struct tcb *next;
-  struct mbox       *mbox;
 }; typedef struct tcb tcb;
 
 typedef struct {
@@ -38,6 +37,12 @@ struct mbox{
   struct messageNode  *msg;       // message queue
   sem_t               *mbox_sem;
 }; typedef struct mbox mbox;
+
+struct mboxList {
+  mbox       *mbox;
+  int         tid;
+  struct mboxList *next;
+};
 
 /*
  * Function: tcb_free
