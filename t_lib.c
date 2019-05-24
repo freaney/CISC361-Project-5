@@ -35,6 +35,8 @@ void t_init() {
   tmp->next = NULL;
   tmp->thread_id = 0;
   tmp->thread_priority = 0;
+  tmp->mbox = NULL;
+  mbox_create(&tmp->mbox);
 
   getcontext(tmp->thread_context); /* let tmp be the context of main() */
   running = tmp;
@@ -172,3 +174,5 @@ void mbox_withdraw(mbox *mb, char *msg, int *len) {
   free(tmp);
   sem_signal(mb->mbox_sem);
 }
+
+
