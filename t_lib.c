@@ -105,7 +105,6 @@ void tcb_free(tcb *thread) {
   free(thread->thread_context);
 }
 
-
 ////////////////////////////////// SEMAPHORES /////////////////////////////////
 int sem_init(sem_t **sp, unsigned int sem_count) {
   *sp = malloc(sizeof(sem_t));
@@ -114,17 +113,52 @@ int sem_init(sem_t **sp, unsigned int sem_count) {
 }
 
 void sem_wait(sem_t *s) {
-  while (s->count < 1){
-    t_yield();
-  }
-  s->count --;
+	while (s->count < 1) {
+		//Basically t_yield()
+		tcb *past = running;
+		// Enqueues previously running thread to semaphore queue
+		tcb *tmp = s->q;
+		if (tmp == NULL) {
+			s->q = past;
+		} else {
+			while (tmp->next != NULL) {
+				tmp = tmp->next;
+			}
+			tmp->next = past;
+		}
+		running = ready;
+		ready = ready->next;
+		running->next = NULL;
+		// Activates new thread
+		swapcontext(past->thread_context, running->thread_context);
+	}
+	s->count--;
 }
 
 void sem_signal(sem_t *s) {
-  s->count ++;
+  s->count++;
+  if (s->q != NULL) {
+	  // Dequeues a thread from the waiting queue, and adds it to the ready queue
+	  tcb *tmp = ready;
+	  tcb *tmp2 = s->q;
+	  s->q = s->q->next; // Removes thread from semaphore queue
+	  tmp2->next = NULL;
+	  if (tmp == NULL) {
+		  ready = tmp2;
+	  } else {
+		  while (tmp->next != NULL) {
+			  tmp = tmp->next;
+		  }
+		  tmp->next = tmp2; // add thread to ready queue
+	  }
+  }
 }
 
 void sem_destroy(sem_t **s)
 {
-
+//	free(s);
+//  free(s->q)
+//  for (int i=0; i<4; i++) {
+//  	free(tmp);
+//  }
 }
