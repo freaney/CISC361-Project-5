@@ -1,7 +1,13 @@
-#include "t_lib.h"
 /*
- * thread library function prototypes
+ * ud_thread.h
+ *
+ * Authors: Sophia Freaney and Connor Onweller
+ *
+ * Purpose: Declares and describes thread library functions
+ * 			as well as semaphore functions
  */
+
+#include "t_lib.h"
 
 /*
  * Function: t_create
@@ -18,8 +24,10 @@ int t_create(void (*fct)(int), int id, int pri);
  * Function: t_yield
  * ------------------
  *	The calling thread voluntarily relinquishes the CPU and is placed at the
- *end of the ready queue. The first thread in the ready queue resumes execution
- *(if there is one).
+ *  end of the ready queue. The first thread in the ready queue resumes execution
+ *  (if there is one).
+ *
+ *  Returns: void
  */
 void t_yield(void);
 
@@ -56,7 +64,71 @@ void t_shutdown(void);
  */
 void t_terminate(void);
 
+///////////////////////////////// SEMAPHORES //////////////////////////////////
+
+/*
+ * Function: sem_init
+ * ------------------
+ *  Initializes semaphore and its parameters: its count (int) and a queue of waiting
+ *  threads (*tcb)
+ *  
+ *  sp: pointer to semaphore to be initialized
+ *  count: initial int value of sp
+ *
+ *  Returns: sem_count (int)
+ *
+ */
 int sem_init(sem_t **sp, unsigned int count);
+
+/*
+ * Function: sem_wait
+ * ------------------
+ * 	If the semaphore count is less than 1, it adds the current running thread to the waiting
+ * 	queue pointed to by the semaphore and dequeues a new thread from the ready queue
+ * 	to be run. Once the semaphore count is at least one, the semaphore is decremented by 1
+ *	
+ *	sp: semaphore used in thread synchronization
+ *
+ *  Returns: void
+ *
+ */
 void sem_wait(sem_t *sp);
+
+/*
+ * Function: sem_signal
+ * ------------------
+ *  Increments semaphore by 1, then wakes up a thread (if there is one available) by
+ *  removing it from the waiting queue and adding it to the ready queue
+ *
+ *	sp: semaphore used in thread synchronization
+ *
+ *  Returns: void
+ *
+ */
 void sem_signal(sem_t *sp);
+
+/*
+ * Function: sem_destroy
+ * ------------------
+ *  Frees semaphore memory
+ *	
+ *	sp: pointer to semaphore used in thread synchronization
+ *
+ *  Returns: void
+ *
+ */
 void sem_destroy(sem_t **sp);
+
+////////////////////////////// MESSAGING //////////////////////////////////////
+
+int mbox_create(mbox **mb);
+
+void mbox_destroy(mbox **mb);
+
+void mbox_deposit(mbox *mb, char *msg, int len);
+
+void mbox_withdraw(mbox *mb, char *msg, int *len);
+
+void send(int tid, char *msg, int len);
+
+void receive(int *tid, char *msg, int *len);

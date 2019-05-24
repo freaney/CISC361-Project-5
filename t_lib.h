@@ -1,6 +1,13 @@
 /*
- * types used by thread library
+ * t_lib.h
+ *
+ * Authors: Sophia Freaney and Connor Onweller
+ *
+ * Purpose: Houses tcb struct, sem_t struct, and
+ * 			tcb_free function
+ *
  */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <ucontext.h>
@@ -17,6 +24,26 @@ typedef struct {
   int count;
   tcb *q;
 } sem_t;
+
+struct messageNode {
+  char *message;     // copy of the message 
+  int  len;          // length of the message 
+  int  sender;       // TID of sender thread 
+  int  receiver;     // TID of receiver thread 
+  struct messageNode *next; // pointer to next node 
+};
+
+struct mbox{
+  struct messageNode  *msg;       // message queue
+  sem_t               *mbox_sem;
+}; typedef struct mbox mbox;
+
+struct mboxList {
+  mbox       *mbox;
+  int         tid;
+  struct mboxList *next;
+};
+
 /*
  * Function: tcb_free
  * -------------------
