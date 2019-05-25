@@ -102,7 +102,8 @@ int t_create(void (*fct)(int), int id, int pri) {
 
 // frees all threads
 void t_shutdown(void) {
-
+	struct mbox *mb = NULL;
+	mbox_destroy(&mb);
   if (ready != NULL) {
     tcb *tmp = ready;
     while (tmp->next != NULL) {
@@ -197,11 +198,42 @@ int mbox_create(mbox **mb) {
   *mb = malloc(sizeof(mbox));
   /* (*mb)->msg = malloc(sizeof(struct messageNode)); */
   (*mb)->msg = NULL;
-  (*mb)->mbox_sem = malloc(sizeof(sem_t));
   sem_init(&((*mb)->mbox_sem), 1);
 }
 
+void mbox_destroy_helper(mbox *mb) {
+	struct messageNode *tmp_node, *last_node;
+	tmp_node = mb->msg;
+	if (tmp_node != NULL) {
+		while (tmp_node->next != NULL) {
+			last_node = tmp_node;
+			tmp_node = tmp_node->next;
+			free(last_node->message);
+			free(last_node);
+		}
+		free(tmp_node->message);
+		free(tmp_node);
+	}
+	free(mb->mbox_sem);
+	free(mb);
+}
+
 void mbox_destroy(mbox **mb) {
+	struct mboxList *tmp_list, *last_list;
+	tmp_list = box_list;
+	if (tmp_list != NULL) {
+		while (tmp_list->next != NULL) {
+			last_list = tmp_list;
+			tmp_list = tmp_list->next;
+			mbox_destroy_helper(last_list->mbox);
+			free(last_list);
+		}
+		mbox_destroy_helper(tmp_list->mbox); //needs to be expanded
+		free(tmp_list);
+	}
+	if ((*mb) != NULL) {
+		mbox_destroy_helper(*mb);
+	}
 }
 
 // going to assume that sender and receiver are both the running thread's id

@@ -123,6 +123,8 @@ void sem_destroy(sem_t **sp);
 
 int mbox_create(mbox **mb);
 
+void mbox_destroy_helper(mbox *mb);
+
 void mbox_destroy(mbox **mb);
 
 void mbox_deposit(mbox *mb, char *msg, int len);
