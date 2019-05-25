@@ -38,6 +38,7 @@ struct mbox{
   sem_t               *mbox_sem;
 }; typedef struct mbox mbox;
 
+// list of message boxes, each assosiated with a thread
 struct mboxList {
   mbox       *mbox;
   int         tid;

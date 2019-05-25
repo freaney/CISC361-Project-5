@@ -1,7 +1,7 @@
 # Project 5
 By Connor Onweller and Sophia Freaney
 
-The main objective of this assignment is to design and implement a user-level thread library. library supports thread creation, thread scheduling, thread synchornization, and inter-thread communication functions.
+The main objective of this assignment is to design and implement a user-level thread library. Library supports thread creation, thread scheduling, thread synchronization, and inter-thread communication functions.
 
 ## Usage
 Compile and run with:
@@ -22,4 +22,11 @@ make
 * Wait (P) on specified semaphore
 * Signal (V) on specified semaphore
 
-
+## Phase 4
+### Inter-Thread Communication
+* Create thread with `mbox_create`
+* Destroy message box with `mbox_destroy`
+* Deposit message with `mbox_deposit`
+* Withdraw message with `mbox_withdraw`
+* Nonblocking send with `send`
+* Nonblocking receive with `receive`
