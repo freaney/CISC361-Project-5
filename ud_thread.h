@@ -120,17 +120,97 @@ void sem_signal(sem_t *sp);
 void sem_destroy(sem_t **sp);
 
 ////////////////////////////// MESSAGING //////////////////////////////////////
-
+/*
+ * Function: mbox_create
+ * ------------------
+ *  Creates a message box, which contains a message string and a semaphore
+ *	
+ *	mb: pointer to mbox pointer to be created
+ *
+ *  Returns: int
+ *
+ */
 int mbox_create(mbox **mb);
 
+/*
+ * Function: mbox_destroy_helper
+ * ------------------
+ *  Assists mbox destroy by deleting the mbox and its message list
+ *	
+ *	mb: mbox to be destroyed
+ *
+ *  Returns: void
+ *
+ */
 void mbox_destroy_helper(mbox *mb);
 
+/*
+ * Function: mbox_destroy
+ * ------------------
+ *  Deletes the mbox_list as well as the input mbox, which can be called from main
+ *	
+ *	mb: pointer to mbox to be destroyed
+ *
+ *  Returns: void
+ *
+ */
 void mbox_destroy(mbox **mb);
 
+/*
+ * Function: mbox_deposit
+ * ------------------
+ *  Sends message from one thread to another
+ *	
+ *	mb: mbox to send message to
+ *	msg: string of message
+ *	len: length of msg
+ *
+ *  Returns: void
+ *
+ */
 void mbox_deposit(mbox *mb, char *msg, int len);
 
+/*
+ * Function: mbox_withdraw
+ * ------------------
+ *  Removes message from mbox and deletes the mbox
+ *	
+ *	mb: mbox from which to obtain message
+ *	msg: message obtained
+ *	len: length of message obtained
+ *
+ *  Returns: void
+ *
+ */
 void mbox_withdraw(mbox *mb, char *msg, int *len);
 
+/*
+ * Function: send
+ * ------------------
+ *  Send a message to a thread
+ *	
+ *	tid: id of thread to be sent message
+ *	msg: message to send
+ *	len: length of msg
+ *
+ *  Returns: void
+ *
+ */
 void send(int tid, char *msg, int len);
 
+/*
+ * Function: receive
+ * ------------------
+ * Wait for and receive a message from another thread.
+ * The caller has to specify the sender's tid in tid, or sets tid to 0
+ * if it intends to receive a message sent by any thread. If there is no
+ * "matching" message to receive, the calling thread waits 
+ *	
+ *	tid: id of matching thread
+ *	msg: message received
+ *	len: length of msg
+ *
+ *  Returns: void
+ *
+ */
 void receive(int *tid, char *msg, int *len);
